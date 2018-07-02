@@ -1,0 +1,77 @@
+{
+	"version": 0,
+	"dependencies": [
+		{
+			"importpath": "github.com/alecthomas/chroma",
+			"repository": "https://github.com/alecthomas/chroma",
+			"vcs": "git",
+			"revision": "d7b2ed20a4989ab604703f61f86523560f8a6a87",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/danwakefield/fnmatch",
+			"repository": "https://github.com/danwakefield/fnmatch",
+			"vcs": "git",
+			"revision": "cbb64ac3d964b81592e64f957ad53df015803288",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/dlclark/regexp2",
+			"repository": "https://github.com/dlclark/regexp2",
+			"vcs": "git",
+			"revision": "7632a260cbaf5e7594fc1544a503456ecd0827f1",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/gorilla/feeds",
+			"repository": "https://github.com/gorilla/feeds",
+			"vcs": "git",
+			"revision": "96fc32f661059113abb411d3183972185b68e4a2",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/pelletier/go-toml",
+			"repository": "https://github.com/pelletier/go-toml",
+			"vcs": "git",
+			"revision": "c01d1270ff3e442a8a57cddc1c92dc1138598194",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/spf13/cobra",
+			"repository": "https://github.com/spf13/cobra",
+			"vcs": "git",
+			"revision": "1e58aa3361fd650121dceeedc399e7189c05674a",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "github.com/spf13/pflag",
+			"repository": "https://github.com/spf13/pflag",
+			"vcs": "git",
+			"revision": "3ebe029320b2676d667ae88da602a5f854788a8a",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/russross/blackfriday.v2",
+			"repository": "https://gopkg.in/russross/blackfriday.v2",
+			"vcs": "git",
+			"revision": "cadec560ec52d93835bf2f15bd794700d3a2473b",
+			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "gopkg.in/yaml.v2",
+			"repository": "https://gopkg.in/yaml.v2",
+			"vcs": "git",
+			"revision": "5420a8b6744d3b0345ab293f6fcba19c978f1183",
+			"branch": "master",
+			"notests": true
+		}
+	]
+}
