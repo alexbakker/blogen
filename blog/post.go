@@ -12,13 +12,14 @@ const (
 type PostDate time.Time
 
 type PostInfo struct {
-	Name     string
-	Filename string
-	Title    string   `yaml:"title"`
-	Date     PostDate `yaml:"date"`
-	Draft    bool     `yaml:"draft"`
-	Exclude  bool     `yaml:"exclude"`
-	Summary  template.HTML
+	Name        string
+	Filename    string
+	Title       string   `yaml:"title"`
+	Date        PostDate `yaml:"date"`
+	Draft       bool     `yaml:"draft"`
+	Exclude     bool     `yaml:"exclude"`
+	Summary     template.HTML
+	SummaryText string
 }
 
 type Post struct {

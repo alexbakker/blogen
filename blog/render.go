@@ -5,6 +5,7 @@ import (
 	"errors"
 	"html/template"
 	"io"
+	"strings"
 
 	"github.com/alecthomas/chroma"
 	"github.com/alecthomas/chroma/formatters/html"
@@ -17,6 +18,7 @@ import (
 func (b *Blog) renderPost(info *PostInfo, input []byte) (*Post, error) {
 	var bodyBuf bytes.Buffer
 	var sumBuf bytes.Buffer
+	var sumText string
 
 	renderer := blackfriday.NewHTMLRenderer(
 		blackfriday.HTMLRendererParameters{
@@ -90,6 +92,11 @@ func (b *Blog) renderPost(info *PostInfo, input []byte) (*Post, error) {
 				foundTitle = true
 				return blackfriday.SkipChildren
 			}
+
+			// store summary text
+			if entering && !foundSum && node.Parent != nil {
+				sumText += strings.TrimSpace(strings.Replace(string(node.Literal), "\n", " ", -1))
+			}
 		}
 
 		if sumNode != nil && !skipSum {
@@ -120,6 +127,7 @@ func (b *Blog) renderPost(info *PostInfo, input []byte) (*Post, error) {
 	renderer.RenderFooter(&bodyBuf, ast)
 
 	info.Summary = template.HTML(sumBuf.Bytes())
+	info.SummaryText = sumText
 
 	return &Post{
 		Info:    info,
