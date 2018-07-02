@@ -49,7 +49,6 @@ func (b *Blog) Generate(dir string) error {
 	}
 
 	// remove the directory and recreate it
-	dir = path.Join(b.dir, dir)
 	if err = os.RemoveAll(dir); err != nil {
 		return err
 	}
