@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -48,25 +49,26 @@ func (b *Blog) Generate(dir string) error {
 		return err
 	}
 
-	// remove the directory and recreate it
-	if err = os.RemoveAll(dir); err != nil {
+	// create the directory if needed
+	if err = mkdir(dir); err != nil {
 		return err
 	}
-	if err = mkdir(dir); err != nil {
+	// clear the directory
+	if err = clearDir(dir); err != nil {
 		return err
 	}
 
 	// copy the static files over
-	staticDir := path.Join(dir, "static")
+	staticDir := filepath.Join(dir, "static")
 	if err = mkdir(staticDir); err != nil {
 		return err
 	}
-	if err = copyDir(staticDir, path.Join(b.dir, "static")); err != nil {
+	if err = copyDir(staticDir, filepath.Join(b.dir, "static")); err != nil {
 		return err
 	}
 
 	// generate syntax highlighting css file
-	styleFile, err := os.Create(path.Join(staticDir, "css", "code.css"))
+	styleFile, err := os.Create(filepath.Join(staticDir, "css", "code.css"))
 	if err != nil {
 		return err
 	}
@@ -90,12 +92,12 @@ func (b *Blog) Generate(dir string) error {
 		}
 		info.Posts = append(info.Posts, post.Info)
 	}
-	if err = b.generatePage(path.Join(dir, "index.html"), "index.html", &info); err != nil {
+	if err = b.generatePage(filepath.Join(dir, "index.html"), "index.html", &info); err != nil {
 		return err
 	}
 
 	// generate the post pages
-	postDir := path.Join(dir, "post")
+	postDir := filepath.Join(dir, "post")
 	if err = mkdir(postDir); err != nil {
 		return err
 	}
@@ -103,7 +105,7 @@ func (b *Blog) Generate(dir string) error {
 		if post.Info.Exclude {
 			continue
 		}
-		if err = b.generatePage(path.Join(postDir, post.Info.Filename), "post.html", post); err != nil {
+		if err = b.generatePage(filepath.Join(postDir, post.Info.Filename), "post.html", post); err != nil {
 			return err
 		}
 	}
@@ -142,7 +144,7 @@ func (b *Blog) Generate(dir string) error {
 			return err
 		}
 
-		if err = ioutil.WriteFile(path.Join(dir, "feed.xml"), []byte(rss), 0666); err != nil {
+		if err = ioutil.WriteFile(filepath.Join(dir, "feed.xml"), []byte(rss), 0666); err != nil {
 			return err
 		}
 	}
@@ -152,11 +154,11 @@ func (b *Blog) Generate(dir string) error {
 
 func (b *Blog) renderPosts() ([]*Post, error) {
 	var posts []*Post
-	dir := path.Join(b.dir, "posts")
+	dir := filepath.Join(b.dir, "posts")
 
 	// parse and render blog posts
 	err := walkFiles(dir, func(file os.FileInfo) error {
-		filename := path.Join(dir, file.Name())
+		filename := filepath.Join(dir, file.Name())
 		name := strings.TrimSuffix(file.Name(), ".md")
 		info := PostInfo{
 			Name:     name,

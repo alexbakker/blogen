@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/alexbakker/blogen/blog"
@@ -43,7 +43,7 @@ func startGen(cmd *cobra.Command, args []string) {
 	}
 
 	if genCmdFlags.OutputDir == "" {
-		genCmdFlags.OutputDir = path.Join(rootCmdFlags.Dir, "public")
+		genCmdFlags.OutputDir = filepath.Join(rootCmdFlags.Dir, "public")
 	}
 	if err = blog.Generate(genCmdFlags.OutputDir); err != nil {
 		log.Fatalf("error generating site: %s", err)

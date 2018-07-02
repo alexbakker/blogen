@@ -2,7 +2,7 @@ package config
 
 import (
 	"io/ioutil"
-	"path"
+	"path/filepath"
 
 	"github.com/alexbakker/blogen/blog"
 	"gopkg.in/yaml.v2"
@@ -17,7 +17,7 @@ type Config struct {
 }
 
 func Load(dir string) (*Config, error) {
-	bytes, err := ioutil.ReadFile(path.Join(dir, configFilename))
+	bytes, err := ioutil.ReadFile(filepath.Join(dir, configFilename))
 	if err != nil {
 		return nil, err
 	}

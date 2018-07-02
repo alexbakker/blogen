@@ -4,21 +4,21 @@ import (
 	"html/template"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 )
 
 func loadTemplates(dir string) (map[string]*template.Template, error) {
-	baseBytes, err := ioutil.ReadFile(path.Join(dir, "base.html"))
+	baseBytes, err := ioutil.ReadFile(filepath.Join(dir, "base.html"))
 	if err != nil {
 		return nil, err
 	}
 
 	baseTemplate := string(baseBytes)
-	pageDir := path.Join(dir, "pages")
+	pageDir := filepath.Join(dir, "pages")
 	templates := map[string]*template.Template{}
 
 	err = walkFiles(pageDir, func(file os.FileInfo) error {
-		filename := path.Join(pageDir, file.Name())
+		filename := filepath.Join(pageDir, file.Name())
 
 		// parse the child layout
 		childTmpl, err := template.New(file.Name()).ParseFiles(filename)

@@ -4,7 +4,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
+	"path/filepath"
 )
 
 func walkFiles(dir string, visit func(file os.FileInfo) error) error {
@@ -40,10 +40,10 @@ func copyDir(dst string, src string) error {
 
 	for _, file := range files {
 		if file.IsDir() {
-			dstDir := path.Join(dst, file.Name())
-			srcDir := path.Join(src, file.Name())
+			dstDir := filepath.Join(dst, file.Name())
+			srcDir := filepath.Join(src, file.Name())
 
-			if err = os.Mkdir(path.Join(dst, file.Name()), file.Mode()); err != nil {
+			if err = os.Mkdir(filepath.Join(dst, file.Name()), file.Mode()); err != nil {
 				return err
 			}
 
@@ -51,13 +51,13 @@ func copyDir(dst string, src string) error {
 				return err
 			}
 		} else {
-			dstFile, err := os.OpenFile(path.Join(dst, file.Name()), os.O_WRONLY|os.O_CREATE, file.Mode())
+			dstFile, err := os.OpenFile(filepath.Join(dst, file.Name()), os.O_WRONLY|os.O_CREATE, file.Mode())
 			if err != nil {
 
 				return err
 			}
 
-			srcFile, err := os.Open(path.Join(src, file.Name()))
+			srcFile, err := os.Open(filepath.Join(src, file.Name()))
 			if err != nil {
 				dstFile.Close()
 				return err
@@ -71,6 +71,28 @@ func copyDir(dst string, src string) error {
 
 			dstFile.Close()
 			srcFile.Close()
+		}
+	}
+
+	return nil
+}
+
+func clearDir(dir string) error {
+	file, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	names, err := file.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
 		}
 	}
 
