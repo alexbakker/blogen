@@ -95,7 +95,7 @@ func (b *Blog) renderPost(info *PostInfo, input []byte) (*Post, error) {
 
 			// store summary text
 			if entering && !foundSum && node.Parent != nil {
-				sumText += strings.TrimSpace(strings.Replace(string(node.Literal), "\n", " ", -1))
+				sumText += strings.Replace(string(node.Literal), "\n", " ", -1)
 			}
 		}
 
