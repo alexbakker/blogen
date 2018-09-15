@@ -59,7 +59,8 @@ func (b *Blog) renderPost(post *Post, input []byte) error {
 				} else {
 					// syntax-highlight any code blocks
 					var codeBuf bytes.Buffer
-					if err := b.renderCode(&codeBuf, string(node.Literal), string(node.CodeBlockData.Info)); err != nil {
+					literal := string(bytes.TrimRight(node.Literal, "\n"))
+					if err := b.renderCode(&codeBuf, literal, string(node.CodeBlockData.Info)); err != nil {
 						bodyErr = err
 						return blackfriday.Terminate
 					}
