@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 )
 
-func (b *Blog) loadTemplates(dir string) (map[string]*template.Template, error) {
+func (b *Blog) loadTemplates(dir string) error {
 	baseBytes, err := ioutil.ReadFile(filepath.Join(dir, "base.html"))
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	baseTemplate := string(baseBytes)
@@ -40,8 +40,9 @@ func (b *Blog) loadTemplates(dir string) (map[string]*template.Template, error) 
 	})
 
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return templates, nil
+	b.templates = templates
+	return nil
 }

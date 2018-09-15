@@ -41,8 +41,7 @@ func New(config Config, dir string) (*Blog, error) {
 		dir:    dir,
 	}
 
-	b.templates, err = b.loadTemplates(path.Join(themeDir, "templates"))
-	if err != nil {
+	if err = b.loadTemplates(path.Join(themeDir, "templates")); err != nil {
 		return nil, err
 	}
 
