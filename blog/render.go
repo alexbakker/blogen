@@ -15,7 +15,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-func (b *Blog) renderPost(info *PostInfo, input []byte) (*Post, error) {
+func (b *Blog) renderPost(post *Post, input []byte) error {
 	var bodyBuf bytes.Buffer
 	var sumBuf bytes.Buffer
 	var sumText string
@@ -48,9 +48,9 @@ func (b *Blog) renderPost(info *PostInfo, input []byte) (*Post, error) {
 		switch node.Type {
 		case blackfriday.CodeBlock:
 			if entering {
-				if !foundInfo && string(node.CodeBlockData.Info) == "post" {
+				if !foundInfo {
 					// parse post info
-					if err := yaml.Unmarshal(node.Literal, info); err != nil {
+					if err := yaml.Unmarshal(node.Literal, post); err != nil {
 						bodyErr = err
 						return blackfriday.Terminate
 					}
@@ -114,25 +114,22 @@ func (b *Blog) renderPost(info *PostInfo, input []byte) (*Post, error) {
 	})
 
 	if bodyErr != nil {
-		return nil, bodyErr
+		return bodyErr
 	}
 	if !foundInfo {
-		return nil, errors.New("post info not found")
+		return errors.New("post info not found")
 	}
 	if !foundSum {
-		return nil, errors.New("couldn't extract post summary")
+		return errors.New("couldn't extract post summary")
 	}
 
 	// render footer
 	renderer.RenderFooter(&bodyBuf, ast)
 
-	info.Summary = template.HTML(sumBuf.Bytes())
-	info.SummaryText = sumText
-
-	return &Post{
-		Info:    info,
-		Content: template.HTML(bodyBuf.Bytes()),
-	}, nil
+	post.Content = template.HTML(bodyBuf.Bytes())
+	post.Summary = template.HTML(sumBuf.Bytes())
+	post.SummaryText = sumText
+	return nil
 }
 
 func (b *Blog) renderCode(output io.Writer, input string, lang string) error {
@@ -145,7 +142,7 @@ func (b *Blog) renderCode(output io.Writer, input string, lang string) error {
 	}
 	lexer = chroma.Coalesce(lexer)
 
-	codeStyle := styles.Get(b.config.CodeStyle)
+	codeStyle := styles.Get(b.theme.Style.Syntax)
 	if codeStyle == nil {
 		return errors.New("style not found")
 	}

@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 )
 
-func loadTemplates(dir string) (map[string]*template.Template, error) {
+func (b *Blog) loadTemplates(dir string) (map[string]*template.Template, error) {
 	baseBytes, err := ioutil.ReadFile(filepath.Join(dir, "base.html"))
 	if err != nil {
 		return nil, err
@@ -16,12 +16,15 @@ func loadTemplates(dir string) (map[string]*template.Template, error) {
 	baseTemplate := string(baseBytes)
 	pageDir := filepath.Join(dir, "pages")
 	templates := map[string]*template.Template{}
+	funcs := template.FuncMap{
+		"hasFeature": b.hasFeature,
+	}
 
 	err = walkFiles(pageDir, func(file os.FileInfo) error {
 		filename := filepath.Join(pageDir, file.Name())
 
 		// parse the child layout
-		childTmpl, err := template.New(file.Name()).ParseFiles(filename)
+		childTmpl, err := template.New(file.Name()).Funcs(funcs).ParseFiles(filename)
 		if err != nil {
 			return err
 		}

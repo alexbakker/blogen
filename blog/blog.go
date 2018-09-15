@@ -1,7 +1,6 @@
 package blog
 
 import (
-	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -14,33 +13,40 @@ import (
 	"strings"
 	"time"
 
-	"github.com/alecthomas/chroma/formatters/html"
-	"github.com/alecthomas/chroma/styles"
 	"github.com/gorilla/feeds"
 )
 
-type BlogInfo struct {
-	Author Author
-	Posts  []*PostInfo
+type IndexInfo struct {
+	Blog  *Config
+	Posts []*Post
 }
 
 type Blog struct {
 	config    Config
+	theme     *Theme
 	dir       string
 	templates map[string]*template.Template
 }
 
 func New(config Config, dir string) (*Blog, error) {
-	templates, err := loadTemplates(path.Join(dir, "templates"))
+	themeDir := path.Join(dir, "theme")
+	theme, err := loadTheme(themeDir)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Blog{
-		config:    config,
-		dir:       dir,
-		templates: templates,
-	}, nil
+	b := Blog{
+		config: config,
+		theme:  theme,
+		dir:    dir,
+	}
+
+	b.templates, err = b.loadTemplates(path.Join(themeDir, "templates"))
+	if err != nil {
+		return nil, err
+	}
+
+	return &b, nil
 }
 
 func (b *Blog) Generate(dir string) error {
@@ -58,39 +64,32 @@ func (b *Blog) Generate(dir string) error {
 		return err
 	}
 
-	// copy the static files over
+	// copy extra files/folders over
+	for _, path := range b.config.Files {
+		dst := filepath.Join(dir, path)
+		src := filepath.Join(b.dir, path)
+
+		if err := copyFileOrDir(dst, src); err != nil {
+			return err
+		}
+	}
+
+	// generate theme files
 	staticDir := filepath.Join(dir, "static")
 	if err = mkdir(staticDir); err != nil {
 		return err
 	}
-	if err = copyDir(staticDir, filepath.Join(b.dir, "static")); err != nil {
-		return err
-	}
-
-	// generate syntax highlighting css file
-	styleFile, err := os.Create(filepath.Join(staticDir, "css", "code.css"))
-	if err != nil {
-		return err
-	}
-	defer styleFile.Close()
-
-	style := styles.Get(b.config.CodeStyle)
-	if style == nil {
-		return errors.New("style not found")
-	}
-	if err = html.New(html.WithClasses()).WriteCSS(styleFile, style); err != nil {
+	if err = b.theme.Generate(staticDir); err != nil {
 		return err
 	}
 
 	// generate the index page
-	info := BlogInfo{
-		Author: b.config.Author,
-	}
+	info := IndexInfo{Blog: &b.config}
 	for _, post := range posts {
-		if post.Info.Exclude || post.Info.Draft {
+		if post.Exclude || post.Draft {
 			continue
 		}
-		info.Posts = append(info.Posts, post.Info)
+		info.Posts = append(info.Posts, post)
 	}
 	if err = b.generatePage(filepath.Join(dir, "index.html"), "index.html", &info); err != nil {
 		return err
@@ -102,16 +101,18 @@ func (b *Blog) Generate(dir string) error {
 		return err
 	}
 	for _, post := range posts {
-		if post.Info.Exclude {
+		if post.Exclude {
 			continue
 		}
-		if err = b.generatePage(filepath.Join(postDir, post.Info.Filename), "post.html", post); err != nil {
+
+		info := PostInfo{Blog: &b.config, Post: post}
+		if err = b.generatePage(filepath.Join(postDir, post.Filename), "post.html", &info); err != nil {
 			return err
 		}
 	}
 
 	// generate rss feed
-	if b.config.EnableRSS {
+	if b.hasFeature("rss") {
 		feed := &feeds.Feed{
 			Title:       b.config.Title,
 			Link:        &feeds.Link{Href: b.config.URL},
@@ -119,7 +120,7 @@ func (b *Blog) Generate(dir string) error {
 		}
 
 		for _, post := range posts {
-			if post.Info.Draft || post.Info.Exclude {
+			if post.Draft || post.Exclude {
 				continue
 			}
 
@@ -127,13 +128,13 @@ func (b *Blog) Generate(dir string) error {
 			if err != nil {
 				return err
 			}
-			url.Path = path.Join(url.Path, "post", post.Info.Filename)
+			url.Path = path.Join(url.Path, "post", post.Filename)
 
 			item := feeds.Item{
-				Title:       post.Info.Title,
+				Title:       post.Title,
 				Link:        &feeds.Link{Href: url.String()},
 				Description: string(post.Content),
-				Created:     time.Time(post.Info.Date),
+				Created:     time.Time(post.Date),
 			}
 
 			feed.Items = append(feed.Items, &item)
@@ -160,7 +161,7 @@ func (b *Blog) renderPosts() ([]*Post, error) {
 	err := walkFiles(dir, func(file os.FileInfo) error {
 		filename := filepath.Join(dir, file.Name())
 		name := strings.TrimSuffix(file.Name(), ".md")
-		info := PostInfo{
+		post := Post{
 			Name:     name,
 			Filename: name + ".html",
 		}
@@ -170,12 +171,11 @@ func (b *Blog) renderPosts() ([]*Post, error) {
 			return err
 		}
 
-		post, err := b.renderPost(&info, bytes)
-		if err != nil {
+		if err = b.renderPost(&post, bytes); err != nil {
 			return err
 		}
 
-		posts = append(posts, post)
+		posts = append(posts, &post)
 		return nil
 	})
 
@@ -205,4 +205,14 @@ func (b *Blog) generatePage(filename string, name string, data interface{}) erro
 	defer file.Close()
 
 	return b.renderTemplate(file, name, data)
+}
+
+func (b *Blog) hasFeature(feature string) bool {
+	for _, f := range b.config.Features {
+		if f == feature {
+			return true
+		}
+	}
+
+	return false
 }

@@ -9,22 +9,23 @@ const (
 	PostDateFormat = "2006-01-02"
 )
 
-type PostDate time.Time
-
-type PostInfo struct {
+type Post struct {
 	Name        string
 	Filename    string
 	Title       string   `yaml:"title"`
 	Date        PostDate `yaml:"date"`
 	Draft       bool     `yaml:"draft"`
 	Exclude     bool     `yaml:"exclude"`
+	Content     template.HTML
 	Summary     template.HTML
 	SummaryText string
 }
 
-type Post struct {
-	Info    *PostInfo
-	Content template.HTML
+type PostDate time.Time
+
+type PostInfo struct {
+	Blog *Config
+	Post *Post
 }
 
 type postSlice []*Post
@@ -34,7 +35,7 @@ func (s postSlice) Len() int {
 }
 
 func (s postSlice) Less(i, j int) bool {
-	return time.Time(s[i].Info.Date).After(time.Time(s[j].Info.Date))
+	return time.Time(s[i].Date).After(time.Time(s[j].Date))
 }
 
 func (s postSlice) Swap(i, j int) {
