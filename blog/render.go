@@ -42,7 +42,6 @@ func (b *Blog) renderPost(post *Post, input []byte) error {
 
 	// parse post info, render summary and render body
 	ast.Walk(func(node *blackfriday.Node, entering bool) blackfriday.WalkStatus {
-		var skip bool
 		var skipSum bool
 
 		switch node.Type {
@@ -55,19 +54,14 @@ func (b *Blog) renderPost(post *Post, input []byte) error {
 						return blackfriday.Terminate
 					}
 					foundInfo = true
-					skip = true
 				} else {
 					// syntax-highlight any code blocks
-					var codeBuf bytes.Buffer
-					literal := string(bytes.TrimRight(node.Literal, "\n"))
-					if err := b.renderCode(&codeBuf, literal, string(node.CodeBlockData.Info)); err != nil {
+					if err := b.renderCode(&bodyBuf, node.Literal, node.CodeBlockData); err != nil {
 						bodyErr = err
 						return blackfriday.Terminate
 					}
-
-					node = blackfriday.NewNode(blackfriday.HTMLBlock)
-					node.Literal = codeBuf.Bytes()
 				}
+				return blackfriday.SkipChildren
 			}
 		case blackfriday.Paragraph:
 			// use the first paragraph as a summary for the post
@@ -107,11 +101,7 @@ func (b *Blog) renderPost(post *Post, input []byte) error {
 			}
 		}
 
-		if !skip {
-			return renderer.RenderNode(&bodyBuf, node, entering)
-		}
-
-		return blackfriday.GoToNext
+		return renderer.RenderNode(&bodyBuf, node, entering)
 	})
 
 	if bodyErr != nil {
@@ -133,10 +123,13 @@ func (b *Blog) renderPost(post *Post, input []byte) error {
 	return nil
 }
 
-func (b *Blog) renderCode(output io.Writer, input string, lang string) error {
+func (b *Blog) renderCode(w io.Writer, literal []byte, data blackfriday.CodeBlockData) error {
+	lang := string(data.Info)
+	text := string(bytes.TrimRight(literal, "\n"))
+
 	lexer := lexers.Get(lang)
 	if lexer == nil {
-		lexer = lexers.Analyse(input)
+		lexer = lexers.Analyse(text)
 	}
 	if lexer == nil {
 		lexer = lexers.Fallback
@@ -148,11 +141,11 @@ func (b *Blog) renderCode(output io.Writer, input string, lang string) error {
 		return errors.New("style not found")
 	}
 
-	iterator, err := lexer.Tokenise(nil, input)
+	iterator, err := lexer.Tokenise(nil, text)
 	if err != nil {
 		return err
 	}
 
 	formatter := html.New(html.WithClasses(), html.WithLineNumbers(), html.LineNumbersInTable())
-	return formatter.Format(output, codeStyle, iterator)
+	return formatter.Format(w, codeStyle, iterator)
 }
