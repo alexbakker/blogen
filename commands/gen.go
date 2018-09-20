@@ -1,6 +1,7 @@
 package commands
 
 import (
+	logger "log"
 	"path/filepath"
 	"time"
 
@@ -17,7 +18,7 @@ var (
 	genCmdFlags genFlags
 	genCmd      = &cobra.Command{
 		Use:   "gen",
-		Short: "Generate the site",
+		Short: "Generate the blog",
 		Run:   startGen,
 	}
 
@@ -30,6 +31,7 @@ func init() {
 }
 
 func startGen(cmd *cobra.Command, args []string) {
+	log.Printf("generating blog %s", rootCmdFlags.Dir)
 	start := time.Now()
 
 	var err error
@@ -37,16 +39,21 @@ func startGen(cmd *cobra.Command, args []string) {
 		log.Fatalf("config error: %s", err)
 	}
 
-	blog, err := blog.New(cfg.Blog, rootCmdFlags.Dir)
+	var logger *logger.Logger
+	if rootCmdFlags.Verbose {
+		logger = log
+	}
+
+	blog, err := blog.New(cfg.Blog, rootCmdFlags.Dir, logger)
 	if err != nil {
-		log.Fatalf("site error: %s", err)
+		log.Fatalf("blog init error: %s", err)
 	}
 
 	if genCmdFlags.OutputDir == "" {
 		genCmdFlags.OutputDir = filepath.Join(rootCmdFlags.Dir, "public")
 	}
 	if err = blog.Generate(genCmdFlags.OutputDir); err != nil {
-		log.Fatalf("error generating site: %s", err)
+		log.Fatalf("error generating blog: %s", err)
 	}
 
 	log.Printf("done! %dms", time.Since(start).Nanoseconds()/int64(time.Millisecond))

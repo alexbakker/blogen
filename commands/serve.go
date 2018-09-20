@@ -15,7 +15,7 @@ var (
 	serveCmdFlags serveFlags
 	serveCmd      = &cobra.Command{
 		Use:   "serve",
-		Short: "Serve the site over HTTP on the specified address and port",
+		Short: "Serve the blog over HTTP on the specified address and port",
 		Run:   startServe,
 	}
 )

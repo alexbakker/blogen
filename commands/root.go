@@ -8,14 +8,15 @@ import (
 )
 
 type rootFlags struct {
-	Dir string
+	Dir     string
+	Verbose bool
 }
 
 var (
 	rootCmdFlags rootFlags
 	RootCmd      = &cobra.Command{
 		Use:   "blogen",
-		Short: "Static blog site generator",
+		Short: "Static blog generator",
 	}
 
 	log = logger.New(os.Stderr, "", 0)
@@ -23,4 +24,5 @@ var (
 
 func init() {
 	RootCmd.PersistentFlags().StringVarP(&rootCmdFlags.Dir, "dir", "d", ".", "The source directory")
+	RootCmd.PersistentFlags().BoolVarP(&rootCmdFlags.Verbose, "verbose", "v", false, "Verbose output")
 }

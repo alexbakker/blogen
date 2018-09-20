@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/url"
 	"os"
 	"path"
@@ -22,26 +23,26 @@ type IndexInfo struct {
 }
 
 type Blog struct {
+	logger    *log.Logger
 	config    Config
-	theme     *Theme
+	theme     Theme
 	dir       string
 	templates map[string]*template.Template
 }
 
-func New(config Config, dir string) (*Blog, error) {
-	themeDir := path.Join(dir, "theme")
-	theme, err := loadTheme(themeDir)
-	if err != nil {
-		return nil, err
-	}
-
+func New(config Config, dir string, logger *log.Logger) (*Blog, error) {
 	b := Blog{
+		logger: logger,
 		config: config,
-		theme:  theme,
 		dir:    dir,
 	}
 
-	if err = b.loadTemplates(path.Join(themeDir, "templates")); err != nil {
+	themeDir := path.Join(dir, "theme")
+	if err := b.loadTheme(themeDir); err != nil {
+		return nil, err
+	}
+
+	if err := b.loadTemplates(path.Join(themeDir, "templates")); err != nil {
 		return nil, err
 	}
 
@@ -90,7 +91,7 @@ func (b *Blog) Generate(dir string) error {
 		}
 		info.Posts = append(info.Posts, post)
 	}
-	if err = b.generatePage(filepath.Join(dir, "index.html"), "index.html", &info); err != nil {
+	if err = b.renderPage(filepath.Join(dir, "index.html"), "index.html", &info); err != nil {
 		return err
 	}
 
@@ -105,7 +106,7 @@ func (b *Blog) Generate(dir string) error {
 		}
 
 		info := PostInfo{Blog: &b.config, Post: post}
-		if err = b.generatePage(filepath.Join(postDir, post.Filename), "post.html", &info); err != nil {
+		if err = b.renderPage(filepath.Join(postDir, post.Filename), "post.html", &info); err != nil {
 			return err
 		}
 	}
@@ -165,6 +166,8 @@ func (b *Blog) renderPosts() ([]*Post, error) {
 			Filename: name + ".html",
 		}
 
+		b.log("rendering %s", filename)
+
 		bytes, err := ioutil.ReadFile(filename)
 		if err != nil {
 			return err
@@ -196,13 +199,14 @@ func (b *Blog) renderTemplate(w io.Writer, name string, data interface{}) error 
 	return tmpl.ExecuteTemplate(w, "base", data)
 }
 
-func (b *Blog) generatePage(filename string, name string, data interface{}) error {
+func (b *Blog) renderPage(filename string, name string, data interface{}) error {
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
+	b.log("rendering %s", filename)
 	return b.renderTemplate(file, name, data)
 }
 
@@ -214,4 +218,10 @@ func (b *Blog) hasFeature(feature string) bool {
 	}
 
 	return false
+}
+
+func (b *Blog) log(format string, v ...interface{}) {
+	if b.logger != nil {
+		b.logger.Printf(format, v...)
+	}
 }

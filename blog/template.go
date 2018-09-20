@@ -22,6 +22,7 @@ func (b *Blog) loadTemplates(dir string) error {
 
 	err = walkFiles(pageDir, func(file os.FileInfo) error {
 		filename := filepath.Join(pageDir, file.Name())
+		b.log("loading %s", filename)
 
 		// parse the child layout
 		childTmpl, err := template.New(file.Name()).Funcs(funcs).ParseFiles(filename)

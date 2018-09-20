@@ -1,7 +1,7 @@
 package blog
 
 import (
-	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -28,19 +28,21 @@ type Theme struct {
 	dir    string
 }
 
-func loadTheme(dir string) (*Theme, error) {
-	bytes, err := ioutil.ReadFile(filepath.Join(dir, themeFilename))
+func (b *Blog) loadTheme(dir string) error {
+	filename := filepath.Join(dir, themeFilename)
+	b.log("loading %s\n", filename)
+
+	bytes, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var theme Theme
-	if err = yaml.Unmarshal(bytes, &theme); err != nil {
-		return nil, err
+	if err = yaml.Unmarshal(bytes, &b.theme); err != nil {
+		return err
 	}
-	theme.dir = dir
+	b.theme.dir = dir
 
-	return &theme, nil
+	return nil
 }
 
 func (t *Theme) Generate(dir string) error {
@@ -75,7 +77,7 @@ func (t *Theme) Generate(dir string) error {
 	// generate syntax highlighting css file and merge it into the style file
 	style := styles.Get(t.Style.Syntax)
 	if style == nil {
-		return errors.New("style not found")
+		return fmt.Errorf("style %s not found", t.Style.Syntax)
 	}
 	if err = html.New(html.WithClasses()).WriteCSS(dstFile, style); err != nil {
 		return err
