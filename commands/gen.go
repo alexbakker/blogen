@@ -31,11 +31,19 @@ func init() {
 }
 
 func startGen(cmd *cobra.Command, args []string) {
-	log.Printf("generating blog %s", rootCmdFlags.Dir)
+	if genCmdFlags.OutputDir == "" {
+		genCmdFlags.OutputDir = filepath.Join(rootCmdFlags.Dir, "public")
+	}
+
+	generateBlog(rootCmdFlags.Dir, genCmdFlags.OutputDir)
+}
+
+func generateBlog(inDir string, outDir string) {
+	log.Printf("generating blog %s", inDir)
 	start := time.Now()
 
 	var err error
-	if cfg, err = config.Load(rootCmdFlags.Dir); err != nil {
+	if cfg, err = config.Load(inDir); err != nil {
 		log.Fatalf("config error: %s", err)
 	}
 
@@ -44,15 +52,12 @@ func startGen(cmd *cobra.Command, args []string) {
 		logger = log
 	}
 
-	blog, err := blog.New(cfg.Blog, rootCmdFlags.Dir, logger)
+	blog, err := blog.New(cfg.Blog, inDir, logger)
 	if err != nil {
 		log.Fatalf("blog init error: %s", err)
 	}
 
-	if genCmdFlags.OutputDir == "" {
-		genCmdFlags.OutputDir = filepath.Join(rootCmdFlags.Dir, "public")
-	}
-	if err = blog.Generate(genCmdFlags.OutputDir); err != nil {
+	if err = blog.Generate(outDir); err != nil {
 		log.Fatalf("error generating blog: %s", err)
 	}
 

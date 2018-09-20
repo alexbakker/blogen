@@ -2,7 +2,6 @@ package server
 
 import (
 	"net/http"
-	"path/filepath"
 )
 
 type Server struct {
@@ -11,8 +10,6 @@ type Server struct {
 }
 
 func New(config Config, dir string) *Server {
-	dir = filepath.Join(dir, "public")
-
 	mux := http.NewServeMux()
 	mux.Handle("/", http.FileServer(http.Dir(dir)))
 

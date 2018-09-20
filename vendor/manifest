@@ -26,6 +26,14 @@
 			"notests": true
 		},
 		{
+			"importpath": "github.com/fsnotify/fsnotify",
+			"repository": "https://github.com/fsnotify/fsnotify",
+			"vcs": "git",
+			"revision": "ccc981bf80385c528a65fbfdd49bf2d8da22aa23",
+			"branch": "master",
+			"notests": true
+		},
+		{
 			"importpath": "github.com/gorilla/feeds",
 			"repository": "https://github.com/gorilla/feeds",
 			"vcs": "git",
@@ -63,6 +71,15 @@
 			"vcs": "git",
 			"revision": "298182f68c66c05229eb03ac171abe6e309ee79a",
 			"branch": "master",
+			"notests": true
+		},
+		{
+			"importpath": "golang.org/x/sys/unix",
+			"repository": "https://go.googlesource.com/sys",
+			"vcs": "git",
+			"revision": "d641721ec2dead6fe5ca284096fe4b1fcd49e427",
+			"branch": "master",
+			"path": "/unix",
 			"notests": true
 		},
 		{
