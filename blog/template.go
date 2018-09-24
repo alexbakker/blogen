@@ -18,6 +18,7 @@ func (b *Blog) loadTemplates(dir string) error {
 	templates := map[string]*template.Template{}
 	funcs := template.FuncMap{
 		"hasFeature": b.hasFeature,
+		"readFile":   b.readFile,
 	}
 
 	err = walkFiles(pageDir, func(file os.FileInfo) error {
@@ -46,4 +47,16 @@ func (b *Blog) loadTemplates(dir string) error {
 
 	b.templates = templates
 	return nil
+}
+
+func (b *Blog) readFile(filename string) template.HTML {
+	filename = filepath.Join(b.dir, "theme", filename)
+
+	bytes, err := ioutil.ReadFile(filename)
+	if err != nil {
+		b.fatal("error reading %s: %s", filename, err)
+		return ""
+	}
+
+	return template.HTML(bytes)
 }

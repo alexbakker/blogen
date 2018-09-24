@@ -37,12 +37,12 @@ func New(config Config, dir string, logger *log.Logger) (*Blog, error) {
 		dir:    dir,
 	}
 
-	themeDir := path.Join(dir, "theme")
+	themeDir := filepath.Join(dir, "theme")
 	if err := b.loadTheme(themeDir); err != nil {
 		return nil, err
 	}
 
-	if err := b.loadTemplates(path.Join(themeDir, "templates")); err != nil {
+	if err := b.loadTemplates(filepath.Join(themeDir, "templates")); err != nil {
 		return nil, err
 	}
 
@@ -223,5 +223,11 @@ func (b *Blog) hasFeature(feature string) bool {
 func (b *Blog) log(format string, v ...interface{}) {
 	if b.logger != nil {
 		b.logger.Printf(format, v...)
+	}
+}
+
+func (b *Blog) fatal(format string, v ...interface{}) {
+	if b.logger != nil {
+		b.logger.Fatalf(format, v...)
 	}
 }
