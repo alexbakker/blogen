@@ -3,7 +3,6 @@ package blog
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"html/template"
 	"io"
 	"strings"
