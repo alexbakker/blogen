@@ -3,6 +3,7 @@ package blog
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"strings"
@@ -27,7 +28,7 @@ func (b *Blog) renderPost(post *Post, input []byte) error {
 	)
 	parser := blackfriday.New(
 		blackfriday.WithRenderer(renderer),
-		blackfriday.WithExtensions(blackfriday.CommonExtensions|blackfriday.AutoHeadingIDs),
+		blackfriday.WithExtensions(blackfriday.CommonExtensions|blackfriday.AutoHeadingIDs|blackfriday.Footnotes),
 	)
 	ast := parser.Parse(input)
 
@@ -92,7 +93,6 @@ func (b *Blog) renderPost(post *Post, input []byte) error {
 			if entering && !foundSum && node.Parent != nil {
 				sumText += strings.Replace(string(node.Literal), "\n", " ", -1)
 			}
-		}
 
 		if sumNode != nil && !skipSum {
 			status := renderer.RenderNode(&sumBuf, node, entering)
