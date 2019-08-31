@@ -93,6 +93,7 @@ func (b *Blog) renderPost(post *Post, input []byte) error {
 			if entering && !foundSum && node.Parent != nil {
 				sumText += strings.Replace(string(node.Literal), "\n", " ", -1)
 			}
+		}
 
 		if sumNode != nil && !skipSum {
 			status := renderer.RenderNode(&sumBuf, node, entering)
