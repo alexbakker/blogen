@@ -1,9 +1,12 @@
 package blog
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path/filepath"
 
 	"github.com/alecthomas/chroma/formatters/html"
@@ -16,9 +19,9 @@ const (
 )
 
 type Style struct {
-	Syntax string   `yaml:"syntax"`
-	Output string   `yaml:"output"`
-	Files  []string `yaml:"files"`
+	Syntax string `yaml:"syntax"`
+	Input  string `yaml:"input"`
+	Output string `yaml:"output"`
 }
 
 type Theme struct {
@@ -45,6 +48,36 @@ func (b *Blog) loadTheme(dir string) error {
 	return nil
 }
 
+func (t *Theme) execSass(input string, w io.Writer) error {
+	inputFile, err := os.Open(input)
+	if err != nil {
+		return err
+	}
+	defer inputFile.Close()
+
+	// generate code syntax highlighting css file
+	buf := new(bytes.Buffer)
+	style := styles.Get(t.Style.Syntax)
+	if style == nil {
+		return fmt.Errorf("style %s not found", t.Style.Syntax)
+	}
+	if err := html.New(html.WithClasses()).WriteCSS(buf, style); err != nil {
+		return err
+	}
+
+	args := []string{"--stdin", "--load-path", filepath.Dir(input), "--style", "compressed"}
+	cmd := exec.Command("sassc", args...)
+	cmd.Stdout = w
+	cmd.Stderr = os.Stderr
+	// merge the code style into the main style file
+	cmd.Stdin = io.MultiReader(inputFile, buf)
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("executing sass: %s", err)
+	}
+
+	return nil
+}
+
 func (t *Theme) Generate(dir string) error {
 	// copy the static files over
 	for _, path := range t.Static {
@@ -56,7 +89,7 @@ func (t *Theme) Generate(dir string) error {
 		}
 	}
 
-	// generate the combined css file
+	// generate the combined css file with sass
 	dst := filepath.Join(dir, t.Style.Output)
 	if err := os.MkdirAll(filepath.Dir(dst), 0777); err != nil {
 		return err
@@ -66,20 +99,7 @@ func (t *Theme) Generate(dir string) error {
 		return err
 	}
 	defer dstFile.Close()
-	files := make([]string, 0, len(t.Style.Files))
-	for _, file := range t.Style.Files {
-		files = append(files, filepath.Join(t.dir, "static", file))
-	}
-	if err := mergeFiles(dstFile, files); err != nil {
-		return err
-	}
-
-	// generate syntax highlighting css file and merge it into the style file
-	style := styles.Get(t.Style.Syntax)
-	if style == nil {
-		return fmt.Errorf("style %s not found", t.Style.Syntax)
-	}
-	if err = html.New(html.WithClasses()).WriteCSS(dstFile, style); err != nil {
+	if err := t.execSass(filepath.Join(t.dir, t.Style.Input), dstFile); err != nil {
 		return err
 	}
 
