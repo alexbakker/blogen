@@ -44,11 +44,11 @@ func (s postSlice) Swap(i, j int) {
 }
 
 func (d PostDate) MarshalText() ([]byte, error) {
-	return []byte(d.String()), nil
+	return []byte(time.Time(d).Format(time.RFC3339)), nil
 }
 
 func (d *PostDate) UnmarshalText(data []byte) error {
-	parsedDate, err := time.Parse(PostDateFormat, string(data))
+	parsedDate, err := time.Parse(time.RFC3339, string(data))
 	if err != nil {
 		return err
 	}
