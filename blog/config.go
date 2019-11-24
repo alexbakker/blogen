@@ -26,13 +26,15 @@ type License struct {
 }
 
 type Config struct {
-	Title       string   `yaml:"title"`
-	Description string   `yaml:"description"`
-	URL         string   `yaml:"url"`
-	Features    []string `yaml:"features"`
-	Files       []string `yaml:"files"`
-	Author      Author   `yaml:"author"`
-	License     License  `yaml:"license"`
-	Socials     []Social `yaml:"socials"`
-	Links       []Link   `yaml:"links"`
+	ExcludeDrafts bool
+	Title         string   `yaml:"title"`
+	Description   string   `yaml:"description"`
+	URL           string   `yaml:"url"`
+	PageSize      int      `yaml:"page_size"`
+	Features      []string `yaml:"features"`
+	Files         []string `yaml:"files"`
+	Author        Author   `yaml:"author"`
+	License       License  `yaml:"license"`
+	Socials       []Social `yaml:"socials"`
+	Links         []Link   `yaml:"links"`
 }

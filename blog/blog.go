@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,8 +19,10 @@ import (
 )
 
 type IndexInfo struct {
-	Blog  *Config
-	Posts []*Post
+	Blog       *Config
+	Posts      []*Post
+	Page       int
+	TotalPages int
 }
 
 type Blog struct {
@@ -83,16 +86,37 @@ func (b *Blog) Generate(dir string) error {
 		return err
 	}
 
-	// generate the index page
-	info := IndexInfo{Blog: &b.config}
-	for _, post := range posts {
-		if post.Exclude || post.Draft {
-			continue
-		}
-		info.Posts = append(info.Posts, post)
+	// generate index and pagination
+	if b.config.PageSize < 1 {
+		return fmt.Errorf("invalid page size: %d", b.config.PageSize)
 	}
-	if err = b.renderPage(filepath.Join(dir, "index.html"), "index.html", &info); err != nil {
+	pagesDir := filepath.Join(dir, "page")
+	if err = mkdir(pagesDir); err != nil {
 		return err
+	}
+	totalPages := (len(posts)-1)/b.config.PageSize + 1
+	for i := 0; i < totalPages; i++ {
+		info := IndexInfo{
+			Blog:       &b.config,
+			Posts:      posts[i*b.config.PageSize : min(i*b.config.PageSize+b.config.PageSize, len(posts))],
+			Page:       i + 1,
+			TotalPages: totalPages,
+		}
+
+		if info.Page == 1 {
+			err = b.renderPage(filepath.Join(dir, "index.html"), "index.html", &info)
+		} else {
+			pageDir := filepath.Join(pagesDir, strconv.Itoa(info.Page))
+			if err = mkdir(pageDir); err != nil {
+				return err
+			}
+
+			err = b.renderPage(filepath.Join(pageDir, "index.html"), "index.html", &info)
+		}
+
+		if err != nil {
+			return err
+		}
 	}
 
 	// generate the post pages
@@ -101,10 +125,6 @@ func (b *Blog) Generate(dir string) error {
 		return err
 	}
 	for _, post := range posts {
-		if post.Exclude {
-			continue
-		}
-
 		info := PostInfo{Blog: &b.config, Post: post}
 		if err = b.renderPage(filepath.Join(postDir, post.Filename), "post.html", &info); err != nil {
 			return err
@@ -120,7 +140,7 @@ func (b *Blog) Generate(dir string) error {
 		}
 
 		for _, post := range posts {
-			if post.Draft || post.Exclude {
+			if post.Draft {
 				continue
 			}
 
@@ -177,7 +197,10 @@ func (b *Blog) renderPosts() ([]*Post, error) {
 			return err
 		}
 
-		posts = append(posts, &post)
+		if !post.Draft || !b.config.ExcludeDrafts {
+			posts = append(posts, &post)
+		}
+
 		return nil
 	})
 

@@ -19,6 +19,12 @@ func (b *Blog) loadTemplates(dir string) error {
 	funcs := template.FuncMap{
 		"hasFeature": b.hasFeature,
 		"readFile":   b.readFile,
+		"inc": func(i int) int {
+			return i + 1
+		},
+		"dec": func(i int) int {
+			return i - 1
+		},
 	}
 
 	err = walkFiles(pageDir, func(file os.FileInfo) error {

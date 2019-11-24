@@ -15,7 +15,6 @@ type Post struct {
 	Title       string   `yaml:"title"`
 	Date        PostDate `yaml:"date"`
 	Draft       bool     `yaml:"draft"`
-	Exclude     bool     `yaml:"exclude"`
 	TOC         template.HTML
 	Content     template.HTML
 	Summary     template.HTML

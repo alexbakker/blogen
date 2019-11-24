@@ -13,8 +13,9 @@ import (
 )
 
 type serveFlags struct {
-	Addr      string
-	OutputDir string
+	Addr          string
+	OutputDir     string
+	ExcludeDrafts bool
 }
 
 var (
@@ -30,6 +31,7 @@ func init() {
 	RootCmd.AddCommand(serveCmd)
 	serveCmd.Flags().StringVarP(&serveCmdFlags.Addr, "addr", "a", "127.0.0.1:8080", "The TCP port to listen on")
 	serveCmd.Flags().StringVarP(&serveCmdFlags.OutputDir, "output", "o", "", "The output directory")
+	serveCmd.Flags().BoolVarP(&serveCmdFlags.ExcludeDrafts, "exclude-drafts", "", false, "Exclude draft posts")
 }
 
 func startServe(cmd *cobra.Command, args []string) {
@@ -42,7 +44,7 @@ func startServe(cmd *cobra.Command, args []string) {
 		defer os.RemoveAll(serveCmdFlags.OutputDir)
 	}
 
-	generateBlog(rootCmdFlags.Dir, serveCmdFlags.OutputDir)
+	generateBlog(rootCmdFlags.Dir, serveCmdFlags.OutputDir, serveCmdFlags.ExcludeDrafts)
 
 	// start HTTP server
 	server := server.New(server.Config{Addr: serveCmdFlags.Addr}, serveCmdFlags.OutputDir)
@@ -80,7 +82,7 @@ func watchBlog() error {
 			select {
 			case _, ok := <-watcher.Events:
 				if ok {
-					generateBlog(rootCmdFlags.Dir, serveCmdFlags.OutputDir)
+					generateBlog(rootCmdFlags.Dir, serveCmdFlags.OutputDir, serveCmdFlags.ExcludeDrafts)
 				}
 				done <- nil
 				return

@@ -35,10 +35,10 @@ func startGen(cmd *cobra.Command, args []string) {
 		genCmdFlags.OutputDir = filepath.Join(rootCmdFlags.Dir, "public")
 	}
 
-	generateBlog(rootCmdFlags.Dir, genCmdFlags.OutputDir)
+	generateBlog(rootCmdFlags.Dir, genCmdFlags.OutputDir, true)
 }
 
-func generateBlog(inDir string, outDir string) {
+func generateBlog(inDir string, outDir string, excludeDrafts bool) {
 	log.Printf("generating blog %s", inDir)
 	start := time.Now()
 
@@ -46,6 +46,7 @@ func generateBlog(inDir string, outDir string) {
 	if cfg, err = config.Load(inDir); err != nil {
 		log.Fatalf("config error: %s", err)
 	}
+	cfg.Blog.ExcludeDrafts = excludeDrafts
 
 	var logger *logger.Logger
 	if rootCmdFlags.Verbose {
