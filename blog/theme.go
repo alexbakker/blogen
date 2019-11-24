@@ -61,7 +61,7 @@ func (t *Theme) execSass(input string, w io.Writer) error {
 	if style == nil {
 		return fmt.Errorf("style %s not found", t.Style.Syntax)
 	}
-	if err := html.New(html.WithClasses()).WriteCSS(buf, style); err != nil {
+	if err := html.New(html.WithClasses(true)).WriteCSS(buf, style); err != nil {
 		return err
 	}
 

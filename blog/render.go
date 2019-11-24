@@ -147,7 +147,7 @@ func (b *Blog) renderCode(w io.Writer, literal []byte, data blackfriday.CodeBloc
 		return err
 	}
 
-	formatter := html.New(html.WithClasses(), html.WithLineNumbers(), html.LineNumbersInTable())
+	formatter := html.New(html.WithClasses(true), html.WithLineNumbers(true), html.LineNumbersInTable(true))
 	return formatter.Format(w, codeStyle, iterator)
 }
 
