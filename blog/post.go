@@ -43,7 +43,7 @@ func (s postSlice) Swap(i, j int) {
 }
 
 func (d PostDate) MarshalText() ([]byte, error) {
-	return []byte(time.Time(d).Format(time.RFC3339)), nil
+	return []byte(d.RFC3339()), nil
 }
 
 func (d *PostDate) UnmarshalText(data []byte) error {
@@ -58,4 +58,8 @@ func (d *PostDate) UnmarshalText(data []byte) error {
 
 func (d PostDate) String() string {
 	return time.Time(d).Format(PostDateFormat)
+}
+
+func (d PostDate) RFC3339() string {
+	return time.Time(d).Format(time.RFC3339)
 }
