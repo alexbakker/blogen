@@ -7,15 +7,7 @@ import (
 	"path/filepath"
 )
 
-func (b *Blog) loadTemplates(dir string) error {
-	baseBytes, err := ioutil.ReadFile(filepath.Join(dir, "base.html"))
-	if err != nil {
-		return err
-	}
-
-	baseTemplate := string(baseBytes)
-	pageDir := filepath.Join(dir, "pages")
-	templates := map[string]*template.Template{}
+func (b *Blog) loadTemplatesDir(baseTemplate string, dir string) (map[string]*template.Template, error) {
 	funcs := template.FuncMap{
 		"hasFeature": b.hasFeature,
 		"readFile":   b.readFile,
@@ -27,8 +19,9 @@ func (b *Blog) loadTemplates(dir string) error {
 		},
 	}
 
-	err = walkFiles(pageDir, func(file os.FileInfo) error {
-		filename := filepath.Join(pageDir, file.Name())
+	templates := map[string]*template.Template{}
+	err := walkFiles(dir, func(file os.FileInfo) error {
+		filename := filepath.Join(dir, file.Name())
 		b.log("loading %s", filename)
 
 		// parse the child layout
@@ -48,10 +41,30 @@ func (b *Blog) loadTemplates(dir string) error {
 	})
 
 	if err != nil {
+		return nil, err
+	}
+
+	return templates, nil
+}
+
+func (b *Blog) loadTemplates(dir string) error {
+	baseBytes, err := ioutil.ReadFile(filepath.Join(dir, "base.html"))
+	if err != nil {
+		return err
+	}
+
+	baseTemplate := string(baseBytes)
+	templates, err := b.loadTemplatesDir(baseTemplate, filepath.Join(dir, "components"))
+	if err != nil {
+		return err
+	}
+	pageTemplates, err := b.loadTemplatesDir(baseTemplate, filepath.Join(dir, "pages"))
+	if err != nil {
 		return err
 	}
 
 	b.templates = templates
+	b.pageTemplates = pageTemplates
 	return nil
 }
 

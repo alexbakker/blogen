@@ -25,11 +25,21 @@ type IndexInfo struct {
 	TotalPages int
 }
 
+type PageInfo struct {
+	Blog *Config
+}
+
 type Blog struct {
-	logger    *log.Logger
-	config    Config
-	theme     Theme
-	dir       string
+	logger        *log.Logger
+	config        Config
+	theme         Theme
+	dir           string
+	templates     map[string]*template.Template
+	pageTemplates map[string]*template.Template
+}
+
+type tmplRenderer struct {
+	log       func(format string, v ...interface{})
 	templates map[string]*template.Template
 }
 
@@ -87,6 +97,7 @@ func (b *Blog) Generate(dir string) error {
 	}
 
 	// generate index and pagination
+	cmpntRenderer := b.newRenderer(b.templates)
 	if b.config.PageSize < 1 {
 		return fmt.Errorf("invalid page size: %d", b.config.PageSize)
 	}
@@ -104,14 +115,14 @@ func (b *Blog) Generate(dir string) error {
 		}
 
 		if info.Page == 1 {
-			err = b.renderPage(filepath.Join(dir, "index.html"), "index.html", &info)
+			err = cmpntRenderer.renderPage(filepath.Join(dir, "index.html"), "index.html", &info)
 		} else {
 			pageDir := filepath.Join(pagesDir, strconv.Itoa(info.Page))
 			if err = mkdir(pageDir); err != nil {
 				return err
 			}
 
-			err = b.renderPage(filepath.Join(pageDir, "index.html"), "index.html", &info)
+			err = cmpntRenderer.renderPage(filepath.Join(pageDir, "index.html"), "index.html", &info)
 		}
 
 		if err != nil {
@@ -126,7 +137,16 @@ func (b *Blog) Generate(dir string) error {
 	}
 	for _, post := range posts {
 		info := PostInfo{Blog: &b.config, Post: post}
-		if err = b.renderPage(filepath.Join(postDir, post.Filename), "post.html", &info); err != nil {
+		if err = cmpntRenderer.renderPage(filepath.Join(postDir, post.Filename), "post.html", &info); err != nil {
+			return err
+		}
+	}
+
+	// generate the custom pages
+	pageRenderer := b.newRenderer(b.pageTemplates)
+	for name := range b.pageTemplates {
+		info := PageInfo{Blog: &b.config}
+		if err = pageRenderer.renderPage(filepath.Join(dir, name), name, &info); err != nil {
 			return err
 		}
 	}
@@ -185,7 +205,6 @@ func (b *Blog) renderPosts() ([]*Post, error) {
 			Name:     name,
 			Filename: name + ".html",
 		}
-
 		b.log("rendering %s", filename)
 
 		bytes, err := ioutil.ReadFile(filename)
@@ -213,8 +232,15 @@ func (b *Blog) renderPosts() ([]*Post, error) {
 	return posts, nil
 }
 
-func (b *Blog) renderTemplate(w io.Writer, name string, data interface{}) error {
-	tmpl, exists := b.templates[name]
+func (b *Blog) newRenderer(templates map[string]*template.Template) *tmplRenderer {
+	return &tmplRenderer{
+		log:       b.log,
+		templates: templates,
+	}
+}
+
+func (r *tmplRenderer) renderTemplate(w io.Writer, name string, data interface{}) error {
+	tmpl, exists := r.templates[name]
 	if !exists {
 		return fmt.Errorf("template %s does not exist", name)
 	}
@@ -222,15 +248,15 @@ func (b *Blog) renderTemplate(w io.Writer, name string, data interface{}) error 
 	return tmpl.ExecuteTemplate(w, "base", data)
 }
 
-func (b *Blog) renderPage(filename string, name string, data interface{}) error {
+func (r *tmplRenderer) renderPage(filename string, name string, data interface{}) error {
 	file, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	b.log("rendering %s", filename)
-	return b.renderTemplate(file, name, data)
+	r.log("rendering %s", filename)
+	return r.renderTemplate(file, name, data)
 }
 
 func (b *Blog) hasFeature(feature string) bool {
