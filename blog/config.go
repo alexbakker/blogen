@@ -35,6 +35,4 @@ type Config struct {
 	Files         []string `yaml:"files"`
 	Author        Author   `yaml:"author"`
 	License       License  `yaml:"license"`
-	Socials       []Social `yaml:"socials"`
-	Links         []Link   `yaml:"links"`
 }
