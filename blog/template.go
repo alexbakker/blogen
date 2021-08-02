@@ -17,6 +17,13 @@ func (b *Blog) loadTemplatesDir(baseTemplate string, dir string) (map[string]*te
 		"dec": func(i int) int {
 			return i - 1
 		},
+		"getPageNums": func(totalPages int) (res []int) {
+			for i := 1; i < totalPages + 1; i++ {
+				res = append(res, i)
+			}
+
+			return res
+		},
 	}
 
 	templates := map[string]*template.Template{}
