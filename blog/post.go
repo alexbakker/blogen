@@ -56,8 +56,8 @@ func (d *PostDate) UnmarshalText(data []byte) error {
 	return nil
 }
 
-func (d PostDate) String() string {
-	return time.Time(d).Format(PostDateFormat)
+func (d PostDate) Format(layout string) string {
+	return time.Time(d).Format(layout)
 }
 
 func (d PostDate) RFC3339() string {
