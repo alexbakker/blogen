@@ -13,7 +13,7 @@
           version = "0.0.0";
           src = ./.;
 
-          vendorSha256 = "sha256-x1R4hzOR4w05K9drxh8dIYdfXyzOP4l1GLmf2ui4SD4=";
+          vendorSha256 = "sha256-yJ+llGnGJcN1CMmVYs86qK5DKlyYd5JGDWare7Aeu4A=";
 
           doCheck = false;
 
