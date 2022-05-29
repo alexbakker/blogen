@@ -24,7 +24,7 @@ type Post struct {
 type PostDate time.Time
 
 type PostInfo struct {
-	Blog *Config
+	*PageInfo
 	Post *Post
 }
 

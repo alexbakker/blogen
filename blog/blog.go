@@ -18,15 +18,16 @@ import (
 	"github.com/gorilla/feeds"
 )
 
+type PageInfo struct {
+	PageName string
+	Blog     *Config
+}
+
 type IndexInfo struct {
-	Blog       *Config
+	*PageInfo
 	Posts      []*Post
 	Page       int
 	TotalPages int
-}
-
-type PageInfo struct {
-	Blog *Config
 }
 
 type Blog struct {
@@ -108,7 +109,7 @@ func (b *Blog) Generate(dir string) error {
 	totalPages := (len(posts)-1)/b.config.PageSize + 1
 	for i := 0; i < totalPages; i++ {
 		info := IndexInfo{
-			Blog:       &b.config,
+			PageInfo:   &PageInfo{PageName: "index.html", Blog: &b.config},
 			Posts:      posts[i*b.config.PageSize : min(i*b.config.PageSize+b.config.PageSize, len(posts))],
 			Page:       i + 1,
 			TotalPages: totalPages,
@@ -136,8 +137,9 @@ func (b *Blog) Generate(dir string) error {
 		return err
 	}
 	for _, post := range posts {
-		info := PostInfo{Blog: &b.config, Post: post}
-		if err = cmpntRenderer.renderPage(filepath.Join(postDir, post.Filename), "post.html", &info); err != nil {
+		const pageName = "post.html"
+		info := PostInfo{PageInfo: &PageInfo{PageName: pageName, Blog: &b.config}, Post: post}
+		if err = cmpntRenderer.renderPage(filepath.Join(postDir, post.Filename), pageName, &info); err != nil {
 			return err
 		}
 	}
@@ -145,7 +147,7 @@ func (b *Blog) Generate(dir string) error {
 	// generate the custom pages
 	pageRenderer := b.newRenderer(b.pageTemplates)
 	for name := range b.pageTemplates {
-		info := PageInfo{Blog: &b.config}
+		info := PageInfo{PageName: name, Blog: &b.config}
 		if err = pageRenderer.renderPage(filepath.Join(dir, name), name, &info); err != nil {
 			return err
 		}
