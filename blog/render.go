@@ -137,7 +137,7 @@ func (b *Blog) renderCode(w io.Writer, literal []byte, data blackfriday.CodeBloc
 	}
 	lexer = chroma.Coalesce(lexer)
 
-	codeStyle := styles.Get(b.theme.Style.Syntax)
+	codeStyle := styles.Get(b.theme.Style.Syntax.Name)
 	if codeStyle == nil {
 		return errors.New("style not found")
 	}
@@ -147,7 +147,7 @@ func (b *Blog) renderCode(w io.Writer, literal []byte, data blackfriday.CodeBloc
 		return err
 	}
 
-	formatter := html.New(html.WithClasses(true), html.WithLineNumbers(true), html.LineNumbersInTable(true))
+	formatter := html.New(html.WithClasses(true), html.WithLineNumbers(b.theme.Style.Syntax.Numbered), html.LineNumbersInTable(true))
 	return formatter.Format(w, codeStyle, iterator)
 }
 

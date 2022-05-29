@@ -18,10 +18,15 @@ const (
 	themeFilename = "theme.yml"
 )
 
+type Syntax struct {
+	Name     string `yaml:"name"`
+	Numbered bool   `yaml:"numbered"`
+}
+
 type Style struct {
-	Syntax string `yaml:"syntax"`
-	Input  string `yaml:"input"`
-	Output string `yaml:"output"`
+	Syntax *Syntax `yaml:"syntax"`
+	Input  string  `yaml:"input"`
+	Output string  `yaml:"output"`
 }
 
 type Theme struct {
@@ -57,9 +62,9 @@ func (t *Theme) execSass(input string, w io.Writer) error {
 
 	// generate code syntax highlighting css file
 	buf := new(bytes.Buffer)
-	style := styles.Get(t.Style.Syntax)
+	style := styles.Get(t.Style.Syntax.Name)
 	if style == nil {
-		return fmt.Errorf("style %s not found", t.Style.Syntax)
+		return fmt.Errorf("style %s not found", t.Style.Syntax.Name)
 	}
 	if err := html.New(html.WithClasses(true)).WriteCSS(buf, style); err != nil {
 		return err
