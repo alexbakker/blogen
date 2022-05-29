@@ -1,17 +1,19 @@
 {
   description = "Nix flake for blogen";
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-21.11";
+  inputs.nixpkgs.url = "nixpkgs/nixos-unstable";
+  inputs.flake-utils.url = "github:numtide/flake-utils";
 
-  outputs = { self, nixpkgs }: let
-      pkgs = import nixpkgs { system = "x86_64-linux"; };
-    in {
-      defaultPackage.x86_64-linux =
-        with pkgs; buildGoModule {
+  outputs = { self, flake-utils, nixpkgs }:
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = import nixpkgs { inherit system; };
+      in {
+        defaultPackage = with pkgs; buildGoModule {
           pname = "blogen";
           version = "0.0.0";
           src = ./.;
 
-          vendorSha256 = "sha256-WLrh7ZwV4zpeAKJ0kPJAwje9EAX6iWMY3CI6LAQjEw4=";
+          vendorSha256 = "sha256-x1R4hzOR4w05K9drxh8dIYdfXyzOP4l1GLmf2ui4SD4=";
 
           doCheck = false;
 
@@ -24,10 +26,11 @@
               --prefix PATH : "${lib.makeBinPath [ sassc ]}"
           '';
         };
-      devShell.x86_64-linux = with pkgs; mkShell {
-        buildInputs = [
-          go
-        ];
-      };
-    };
+        devShell = with pkgs; mkShell {
+          buildInputs = [
+            go
+          ];
+        };
+      }
+    );
 }

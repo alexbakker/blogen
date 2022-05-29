@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/alexbakker/blogen/blog"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const (
