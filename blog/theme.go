@@ -18,9 +18,15 @@ const (
 	themeFilename = "theme.yml"
 )
 
+type SyntaxStyle struct {
+	Name   string `yaml:"name"`
+	Scheme string `yaml:"scheme"`
+}
+
 type Syntax struct {
-	Name     string `yaml:"name"`
-	Numbered bool   `yaml:"numbered"`
+	Default  string         `yaml:"default"`
+	Styles   []*SyntaxStyle `yaml:"styles"`
+	Numbered bool           `yaml:"numbered"`
 }
 
 type Style struct {
@@ -62,12 +68,10 @@ func (t *Theme) execSass(input string, w io.Writer) error {
 
 	// generate code syntax highlighting css file
 	buf := new(bytes.Buffer)
-	style := styles.Get(t.Style.Syntax.Name)
-	if style == nil {
-		return fmt.Errorf("style %s not found", t.Style.Syntax.Name)
-	}
-	if err := html.New(html.WithClasses(true)).WriteCSS(buf, style); err != nil {
-		return err
+	for _, syntaxStyle := range t.Style.Syntax.Styles {
+		if err := writeSyntaxCSS(buf, syntaxStyle); err != nil {
+			return err
+		}
 	}
 
 	args := []string{"--stdin", "--load-path", filepath.Dir(input), "--style", "compressed"}
@@ -108,5 +112,20 @@ func (t *Theme) Generate(dir string) error {
 		return err
 	}
 
+	return nil
+}
+
+func writeSyntaxCSS(w io.Writer, syntaxStyle *SyntaxStyle) error {
+	fmt.Fprintf(w, "html[data-theme=\"%s\"] {\n", syntaxStyle.Scheme)
+
+	style := styles.Get(syntaxStyle.Name)
+	if style == nil {
+		return fmt.Errorf("style %s not found", syntaxStyle.Name)
+	}
+	if err := html.New(html.WithClasses(true)).WriteCSS(w, style); err != nil {
+		return err
+	}
+
+	fmt.Fprintln(w, "}")
 	return nil
 }

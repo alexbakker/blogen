@@ -137,7 +137,7 @@ func (b *Blog) renderCode(w io.Writer, literal []byte, data blackfriday.CodeBloc
 	}
 	lexer = chroma.Coalesce(lexer)
 
-	codeStyle := styles.Get(b.theme.Style.Syntax.Name)
+	codeStyle := styles.Get(b.theme.Style.Syntax.Default)
 	if codeStyle == nil {
 		return errors.New("style not found")
 	}
