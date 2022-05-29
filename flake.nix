@@ -29,6 +29,8 @@
         devShell = with pkgs; mkShell {
           buildInputs = [
             go
+            graphviz
+            sassc
           ];
         };
       }

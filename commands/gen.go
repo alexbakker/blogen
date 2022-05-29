@@ -2,7 +2,9 @@ package commands
 
 import (
 	logger "log"
+	"os"
 	"path/filepath"
+	"runtime/pprof"
 	"time"
 
 	"github.com/alexbakker/blogen/blog"
@@ -11,7 +13,8 @@ import (
 )
 
 type genFlags struct {
-	OutputDir string
+	OutputDir      string
+	CPUProfileFile string
 }
 
 var (
@@ -28,9 +31,21 @@ var (
 func init() {
 	RootCmd.AddCommand(genCmd)
 	genCmd.Flags().StringVarP(&genCmdFlags.OutputDir, "output", "o", "", "The output directory")
+	genCmd.Flags().StringVarP(&genCmdFlags.CPUProfileFile, "cpu-profile", "", "", "The location to output a CPU profile recording to")
 }
 
 func startGen(cmd *cobra.Command, args []string) {
+	if genCmdFlags.CPUProfileFile != "" {
+		file, err := os.Create(genCmdFlags.CPUProfileFile)
+		if err != nil {
+			log.Fatalf("pprof file creation error: %s", err)
+		}
+		defer file.Close()
+
+		pprof.StartCPUProfile(file)
+		defer pprof.StopCPUProfile()
+	}
+
 	if genCmdFlags.OutputDir == "" {
 		genCmdFlags.OutputDir = filepath.Join(rootCmdFlags.Dir, "public")
 	}
