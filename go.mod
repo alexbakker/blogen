@@ -19,3 +19,5 @@ require (
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 )
+
+replace github.com/alecthomas/chroma/v2 => github.com/alexbakker/chroma/v2 v2.0.2-0.20220529203822-b157ed683eb7

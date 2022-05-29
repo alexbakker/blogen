@@ -136,6 +136,7 @@ func (b *Blog) renderCode(w io.Writer, literal []byte, data blackfriday.CodeBloc
 		lexer = lexers.Fallback
 	}
 	lexer = chroma.Coalesce(lexer)
+	lexer.SetRegexTimeout(0)
 
 	codeStyle := styles.Get(b.theme.Style.Syntax.Default)
 	if codeStyle == nil {
