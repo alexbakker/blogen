@@ -27,6 +27,7 @@ type License struct {
 
 type Config struct {
 	ExcludeDrafts bool
+	VersionInfo   string
 	Title         string   `yaml:"title"`
 	Description   string   `yaml:"description"`
 	URL           string   `yaml:"url"`

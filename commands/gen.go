@@ -14,7 +14,9 @@ import (
 
 type genFlags struct {
 	OutputDir      string
+	IncludeDrafts  bool
 	CPUProfileFile string
+	VersionInfo    string
 }
 
 var (
@@ -31,10 +33,20 @@ var (
 func init() {
 	RootCmd.AddCommand(genCmd)
 	genCmd.Flags().StringVarP(&genCmdFlags.OutputDir, "output", "o", "", "The output directory")
+	genCmd.Flags().BoolVarP(&genCmdFlags.IncludeDrafts, "include-drafts", "", false, "Include draft posts")
 	genCmd.Flags().StringVarP(&genCmdFlags.CPUProfileFile, "cpu-profile", "", "", "The location to output a CPU profile recording to")
+	genCmd.Flags().StringVarP(&genCmdFlags.VersionInfo, "version-info", "", "", "Version info to pass to blog templates (i.e. git hash)")
 }
 
 func startGen(cmd *cobra.Command, args []string) {
+	if genCmdFlags.OutputDir == "" {
+		genCmdFlags.OutputDir = filepath.Join(rootCmdFlags.Dir, "public")
+	}
+
+	generateBlog(rootCmdFlags.Dir, &genCmdFlags)
+}
+
+func generateBlog(inDir string, flags *genFlags) {
 	if genCmdFlags.CPUProfileFile != "" {
 		file, err := os.Create(genCmdFlags.CPUProfileFile)
 		if err != nil {
@@ -46,14 +58,6 @@ func startGen(cmd *cobra.Command, args []string) {
 		defer pprof.StopCPUProfile()
 	}
 
-	if genCmdFlags.OutputDir == "" {
-		genCmdFlags.OutputDir = filepath.Join(rootCmdFlags.Dir, "public")
-	}
-
-	generateBlog(rootCmdFlags.Dir, genCmdFlags.OutputDir, true)
-}
-
-func generateBlog(inDir string, outDir string, excludeDrafts bool) {
 	log.Printf("generating blog %s", inDir)
 	start := time.Now()
 
@@ -61,7 +65,8 @@ func generateBlog(inDir string, outDir string, excludeDrafts bool) {
 	if cfg, err = config.Load(inDir); err != nil {
 		log.Fatalf("config error: %s", err)
 	}
-	cfg.Blog.ExcludeDrafts = excludeDrafts
+	cfg.Blog.VersionInfo = flags.VersionInfo
+	cfg.Blog.ExcludeDrafts = !flags.IncludeDrafts
 
 	var logger *logger.Logger
 	if rootCmdFlags.Verbose {
@@ -73,7 +78,7 @@ func generateBlog(inDir string, outDir string, excludeDrafts bool) {
 		log.Fatalf("blog init error: %s", err)
 	}
 
-	if err = blog.Generate(outDir); err != nil {
+	if err = blog.Generate(flags.OutputDir); err != nil {
 		log.Fatalf("error generating blog: %s", err)
 	}
 

@@ -16,6 +16,7 @@ type serveFlags struct {
 	Addr          string
 	OutputDir     string
 	ExcludeDrafts bool
+	VersionInfo   string
 }
 
 var (
@@ -32,6 +33,7 @@ func init() {
 	serveCmd.Flags().StringVarP(&serveCmdFlags.Addr, "addr", "a", "127.0.0.1:8080", "The TCP port to listen on")
 	serveCmd.Flags().StringVarP(&serveCmdFlags.OutputDir, "output", "o", "", "The output directory")
 	serveCmd.Flags().BoolVarP(&serveCmdFlags.ExcludeDrafts, "exclude-drafts", "", false, "Exclude draft posts")
+	serveCmd.Flags().StringVarP(&serveCmdFlags.VersionInfo, "version-info", "", "dev", "Version info to pass to blog templates (i.e. git hash)")
 }
 
 func startServe(cmd *cobra.Command, args []string) {
@@ -44,7 +46,11 @@ func startServe(cmd *cobra.Command, args []string) {
 		defer os.RemoveAll(serveCmdFlags.OutputDir)
 	}
 
-	generateBlog(rootCmdFlags.Dir, serveCmdFlags.OutputDir, serveCmdFlags.ExcludeDrafts)
+	generateBlog(rootCmdFlags.Dir, &genFlags{
+		OutputDir:     serveCmdFlags.OutputDir,
+		IncludeDrafts: !serveCmdFlags.ExcludeDrafts,
+		VersionInfo:   serveCmdFlags.VersionInfo,
+	})
 
 	// start HTTP server
 	server := server.New(server.Config{Addr: serveCmdFlags.Addr}, serveCmdFlags.OutputDir)
@@ -82,7 +88,11 @@ func watchBlog() error {
 			select {
 			case _, ok := <-watcher.Events:
 				if ok {
-					generateBlog(rootCmdFlags.Dir, serveCmdFlags.OutputDir, serveCmdFlags.ExcludeDrafts)
+					generateBlog(rootCmdFlags.Dir, &genFlags{
+						OutputDir:     serveCmdFlags.OutputDir,
+						IncludeDrafts: !serveCmdFlags.ExcludeDrafts,
+						VersionInfo:   "dev",
+					})
 				}
 				done <- nil
 				return
