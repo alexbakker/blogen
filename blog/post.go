@@ -60,6 +60,10 @@ func (d PostDate) Format(layout string) string {
 	return time.Time(d).Format(layout)
 }
 
+func (d PostDate) Year() int {
+	return time.Time(d).Year()
+}
+
 func (d PostDate) RFC3339() string {
 	return time.Time(d).Format(time.RFC3339)
 }
