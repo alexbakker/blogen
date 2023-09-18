@@ -8,11 +8,11 @@
       let
         pkgs = import nixpkgs { inherit system; };
       in {
-        defaultPackage = with pkgs; buildGoModule {
+        defaultPackage = with pkgs; buildGo121Module {
           name = "blogen";
           src = ./.;
 
-          vendorSha256 = "sha256-cky2HgfpauJfe2HNUZRwWpTIohJDf2Gw/7/P+Hu7FCE=";
+          vendorSha256 = "sha256-yovmZ3CZmxaNM0VEy2l2tgPqYgESeUCfLs0JdiNz0i4=";
 
           doCheck = false;
 
@@ -27,7 +27,7 @@
         };
         devShell = with pkgs; mkShell {
           buildInputs = [
-            go
+            go_1_21
             graphviz
             sassc
           ];
