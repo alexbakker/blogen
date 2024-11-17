@@ -12,7 +12,7 @@
           name = "blogen";
           src = ./.;
 
-          vendorSha256 = "sha256-yovmZ3CZmxaNM0VEy2l2tgPqYgESeUCfLs0JdiNz0i4=";
+          vendorHash = "sha256-ffpCUJ65qDcGQlpOY3BO2WJTXPuqVdtA1jm74q2EeHM=";
 
           doCheck = false;
 
