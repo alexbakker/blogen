@@ -8,7 +8,7 @@
       let
         pkgs = import nixpkgs { inherit system; };
       in {
-        defaultPackage = with pkgs; buildGo121Module {
+        defaultPackage = with pkgs; buildGoModule {
           name = "blogen";
           src = ./.;
 
@@ -27,7 +27,7 @@
         };
         devShell = with pkgs; mkShell {
           buildInputs = [
-            go_1_21
+            go
             graphviz
             sassc
           ];
